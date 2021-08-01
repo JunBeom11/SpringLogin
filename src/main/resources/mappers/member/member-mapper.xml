@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Mapper 설정 파일임을 선언하는 부분 -->
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <!-- 
+  	namespace 속성
+  		외부에서 이 mapper에 접근할 수 있는 별칭	
+  -->
+ <mapper namespace="com.kh.mvc.member.model.mapper.MemberMapper">
+ 	<!-- 
+ 		중복되는 쿼리 내용을 재사용하기 위한 SQL 조각
+ 		사용하려는 태그보다 항상 위에 있어야한다.
+ 	 -->
+ 	<sql id="selectMemberSql">
+ 		SELECT  NO, 
+			    ID, 
+			    PASSWORD, 
+			    ROLE,
+			    NAME, 
+			    PHONE, 
+			    EMAIL, 
+			    ADDRESS, 
+			    HOBBY, 
+			    STATUS, 
+			    ENROLL_DATE, 
+			    MODIFY_DATE
+		FROM MEMBER
+ 	</sql>
+ 
+ 	<!-- 
+ 		resultMap은 DB의 조회 결과와 자바클래스를 매핑 해줄 때 사용한다. (JDBC 코드를 줄여주는 역활을 한다.) 
+ 	
+ 			type 속성 : ResultSet의 결과를 담을 자바 클래스명으로 어떤 타입(클래스)을 참조할 것인지 기술한다. (alias 사용)
+ 			id 속성 : resultMap의 고유 아이디로 select 문에서 resultMap 속성에 사용하게 된다.
+ 	 -->
+ 	<resultMap type="Member" id="memberResultMap">
+ 		<!-- property : 자바의 인스턴스 변수 이름, column : DB에서 select에 지정된 컬럼명 -->
+ 		<!-- 테이블에서 기본키를 의미 -->
+ 		<id property="no" column="NO"/>
+ 		<!-- 테이블에서 일반 컬럼들을 의미 -->
+ 		<result property="id" column="ID" />
+ 		<result property="password" column="PASSWORD"/>
+ 		<result property="role" column="ROLE"/>
+ 		<result property="name" column="NAME"/>
+ 		<result property="phone" column="PHONE"/>
+ 		<result property="email" column="EMAIL"/>
+ 		<result property="address" column="ADDRESS"/>
+ 		<result property="hobby" column="HOBBY"/>
+ 		<result property="status" column="STATUS"/>
+ 		<result property="enrollDate" column="ENROLL_DATE"/>
+ 		<result property="modifyDate" column="MODIFY_DATE"/>
+ 	</resultMap>
+ 
+ 	<!-- 
+ 		SELECT 구문
+ 			id 속성 : 외부에서 참조하기 위한 쿼리문의 고유 아이디
+ 			resultType : 쿼리 실행 후 조회된 결과값의 자료형
+ 	 -->
+ 	<select id="selectCount" resultType="_int">
+ 		SELECT COUNT(*) FROM MEMBER
+ 	</select>
+ 	
+ 	
+ 	<!-- 
+ 		쿼리문의 수행 결과가 담긴 ResultSet은 resultType의 객체에 자동으로 mapping되어 리턴된다.
+ 		단, 조회 결과의 컬럼명과 자바에서의 클래스 변수명이 동일해야 자동으로 mapping이 된다. (대소문자는 구별하지 않음)
+ 		
+ 		1) 쿼리문에서 "as 별칭"으로 조회되는 컬럼명을 변경한다. (유지보수 문제로 비추천)
+ 		2) resultMap을 이용해서 명시적으로 컬럼명과 변수명을 mapping 시켜준다. (추천)
+ 	 -->
+ 	<select id="selectAll" resultMap="memberResultMap">
+ 		<include refid="selectMemberSql" />
+ 		<!-- 
+ 		방법 1)
+ 		SELECT  NO, 
+			    ID, 
+			    PASSWORD, 
+			    ROLE,
+			    NAME, 
+			    PHONE, 
+			    EMAIL, 
+			    ADDRESS, 
+			    HOBBY, 
+			    STATUS, 
+			    ENROLL_DATE AS enrollDate, 
+			    MODIFY_DATE AS modifyDate
+		FROM MEMBER
+ 	 	-->
+ 	 	<!-- 
+ 	 	방법 2) 
+ 		SELECT  NO, 
+			    ID, 
+			    PASSWORD, 
+			    ROLE,
+			    NAME, 
+			    PHONE, 
+			    EMAIL, 
+			    ADDRESS, 
+			    HOBBY, 
+			    STATUS, 
+			    ENROLL_DATE, 
+			    MODIFY_DATE
+		FROM MEMBER
+ 	 	-->
+ 	</select>
+ 	
+ 	
+ 	<!-- 
+ 		외부에서 매개변수로 받는 값이 있으면 해당하는 매개변수의 타입을 지정해줘야한다.(parameterType="string")
+ 		외부에서 매개변수로 받은 값은 #{변수명}로 설정해서 값을 가져온다.
+ 	 -->
+ 	<select id="selectMember" parameterType="string" resultMap="memberResultMap">
+ 		<include refid="selectMemberSql" />
+		WHERE ID = #{id} AND STATUS ='Y'
+ 	</select>
+ 	
+ 	<!-- 
+ 		데이터를 insert 후 PK 값을 받아오기 위해 아래와 같이 useGeneratedKeys, keyProperty, keyColumn 속성을 추가한다.
+ 	
+ 			useGeneratedKeys 속성 : insert 후 PK 값을 받아올 수 있도록 허용하는 속성 (기본값: false)
+ 			keyColumn 속성 : 실제 PK에 해당하는 컬럼명
+ 			keyProperty 속성 : PK값이 매핑될 인스턴스 변수명
+ 	 -->
+ 	<insert id="insertMember" parameterType="Member"
+ 		useGeneratedKeys="true" keyColumn="NO" keyProperty="no" >
+
+	 	INSERT INTO MEMBER (
+		    NO, 
+		    ID, 
+		    PASSWORD, 
+		    ROLE,
+		    NAME, 
+		    PHONE, 
+		    EMAIL, 
+		    ADDRESS, 
+		    HOBBY, 
+		    STATUS, 
+		    ENROLL_DATE, 
+		    MODIFY_DATE
+		) VALUES(
+		    SEQ_UNO.NEXTVAL, 
+		    #{id},
+		    #{password},
+		    DEFAULT,
+		    #{name},
+		    #{phone},
+		    #{email} ,
+		    #{address},
+		    #{hobby},
+		    DEFAULT,
+		    DEFAULT,
+		    DEFAULT
+		) 	
+ 	</insert>
+ 	
+ 	<update id="updateMember" parameterType="Member">
+ 		UPDATE MEMBER 
+ 		SET 
+ 			NAME = #{name},
+ 			PHONE = #{phone},
+ 			EMAIL = #{email},
+ 			ADDRESS = #{address},
+ 			HOBBY = #{hobby},
+ 			MODIFY_DATE = SYSDATE 
+		WHERE NO = #{no}
+ 	</update>
+ 	
+ 	<update id="deleteMember" parameterType="_int">
+ 		UPDATE MEMBER 
+ 		SET
+ 			STATUS='N'
+ 		WHERE 
+ 			NO=#{no}
+ 	</update>
+ </mapper>
